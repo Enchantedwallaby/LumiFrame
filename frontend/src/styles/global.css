@@ -1,0 +1,97 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  @apply font-sans bg-gradient-main text-light overflow-x-hidden;
+}
+
+/* Buttons */
+.btn-primary {
+  @apply bg-gradient-button text-white font-semibold py-3 px-6 rounded-xl shadow-glow 
+         hover:shadow-[0_0_30px_rgba(157,108,255,0.6)] transition-all duration-300;
+}
+
+.btn-secondary {
+  @apply border border-soft text-soft font-semibold py-3 px-6 rounded-xl hover:bg-soft 
+         hover:text-white transition-all duration-300;
+}
+
+.btn-outline {
+  @apply bg-transparent border border-accent text-accent py-3 px-6 rounded-xl 
+         hover:bg-accent hover:text-white transition-all duration-300;
+}
+
+/* Card style */
+.card {
+  @apply bg-gradient-card border border-[#5A3FFF]/30 rounded-2xl shadow-xl backdrop-blur-lg;
+}
+
+/* Input fields */
+input, textarea {
+  @apply w-full px-4 py-2 rounded-lg bg-[#1E1433]/70 border border-[#5A3FFF]/30 text-light 
+         placeholder-[#B5A8FF] focus:ring-2 focus:ring-accent focus:outline-none;
+}
+
+/* Headings */
+h1, h2, h3, h4 {
+  @apply font-display text-light;
+}
+/* Animated gradient background */
+@keyframes moveGradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+body {
+  background: linear-gradient(135deg, #120C1F, #2E1A47, #5A3FFF);
+  background-size: 300% 300%;
+  animation: moveGradient 15s ease infinite;
+}
+@keyframes gradientMove {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-gradient-move {
+  background-size: 300% 300%;
+  animation: gradientMove 15s ease infinite;
+}
+@keyframes gradientMove {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-gradient-move {
+  background-size: 300% 300%;
+  animation: gradientMove 15s ease infinite;
+}
+
+body {
+  @apply text-gray-100 font-sans;
+}
