@@ -115,3 +115,30 @@ def save_photo_metadata(filename, matches):
               (filename, now, matches_json))
     conn.commit()
     conn.close()
+
+def delete_photo_metadata(filename):
+    conn = get_conn()
+    c = conn.cursor()
+    c.execute("DELETE FROM photos WHERE filename = ?", (filename,))
+    conn.commit()
+    conn.close()
+
+def delete_user(name):
+    conn = get_conn()
+    c = conn.cursor()
+    # Get user id
+    c.execute("SELECT id FROM users WHERE name = ?", (name,))
+    row = c.fetchone()
+    if not row:
+        conn.close()
+        return False
+    user_id = row["id"]
+    # Delete sessions
+    c.execute("DELETE FROM sessions WHERE user_id = ?", (user_id,))
+    # Delete user
+    c.execute("DELETE FROM users WHERE id = ?", (user_id,))
+    conn.commit()
+    conn.close()
+    return True
+
+

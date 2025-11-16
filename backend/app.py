@@ -232,15 +232,119 @@ def admin_list_users():
 
 
 # -----------------------------------------------------------
-# STATIC FILE SERVING (Uploaded Photos)
+# STATIC FILE SERVING (Uploaded Photos) + DOWNLOAD
 # -----------------------------------------------------------
+# DELETE USER ACCOUNT (Photographer Only)
+# -----------------------------------------------------------
+@app.route('/delete_user/<username>', methods=['DELETE'])
+def delete_user(username):
+    try:
+        auth_key = request.headers.get('X-Photographer-Key')
+        if auth_key != PHOTOGRAPHER_KEY:
+            return jsonify({"success": False, "error": "Unauthorized"}), 403
+
+        # Delete from database
+        if not db.delete_user(username):
+            return jsonify({"success": False, "error": "User not found"}), 404
+
+        # Delete user folder and files
+        user_dir = os.path.join(UPLOAD_FOLDER, username)
+        if os.path.exists(user_dir):
+            import shutil
+            shutil.rmtree(user_dir)
+
+        # Delete known faces folder
+        known_dir = os.path.join(KNOWN_FOLDER, username)
+        if os.path.exists(known_dir):
+            shutil.rmtree(known_dir)
+
+        return jsonify({"success": True, "message": f"User '{username}' and all associated data deleted"}), 200
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# -----------------------------------------------------------
+
+
 @app.route('/uploads/<user>/<filename>')
 def serve_upload(user, filename):
     try:
         directory = os.path.join(UPLOAD_FOLDER, user)
         if not os.path.exists(directory):
             return jsonify({"success": False, "error": "Folder not found"}), 404
-        return send_from_directory(directory, filename)
+
+        download = request.args.get('download', 'false').lower() == 'true'
+        if download:
+            from flask import send_file
+            filepath = os.path.join(directory, filename)
+            if not os.path.exists(filepath):
+                return jsonify({"success": False, "error": "File not found"}), 404
+            return send_file(filepath, as_attachment=True, download_name=filename)
+        else:
+            return send_from_directory(directory, filename)
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# -----------------------------------------------------------
+# DELETE PHOTO (Individual) — Requires Token or Photographer Key
+# -----------------------------------------------------------
+
+
+@app.route('/delete/<username>/<filename>', methods=['DELETE'])
+def delete_photo(username, filename):
+    try:
+        auth_key = request.headers.get('X-Photographer-Key')
+        if auth_key == PHOTOGRAPHER_KEY:
+            allowed = True
+        else:
+            user = db.get_user_by_name(username)
+            if not user:
+                return jsonify({"success": False, "error": "User not found"}), 404
+            uid = get_auth_user_id()
+            allowed = (uid == user["id"])
+
+        if not allowed:
+            return jsonify({"success": False, "error": "Unauthorized"}), 403
+
+        user_dir = os.path.join(UPLOAD_FOLDER, username)
+        filepath = os.path.join(user_dir, filename)
+        if not os.path.exists(filepath):
+            return jsonify({"success": False, "error": "File not found"}), 404
+
+        os.remove(filepath)
+        db.delete_photo_metadata(filename)
+
+        return jsonify({"success": True, "message": f"Photo '{filename}' deleted"}), 200
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# -----------------------------------------------------------
+# DELETE ALL PHOTOS (Photographer Only)
+# -----------------------------------------------------------
+
+
+@app.route('/delete/<username>/all', methods=['DELETE'])
+def delete_all_photos(username):
+    try:
+        auth_key = request.headers.get('X-Photographer-Key')
+        if auth_key != PHOTOGRAPHER_KEY:
+            return jsonify({"success": False, "error": "Unauthorized"}), 403
+
+        user_dir = os.path.join(UPLOAD_FOLDER, username)
+        if not os.path.exists(user_dir):
+            return jsonify({"success": False, "error": "User folder not found"}), 404
+
+        deleted_files = []
+        for f in os.listdir(user_dir):
+            if f.lower().endswith(('.jpg', '.jpeg', '.png')):
+                filepath = os.path.join(user_dir, f)
+                os.remove(filepath)
+                db.delete_photo_metadata(f)
+                deleted_files.append(f)
+
+        return jsonify({"success": True, "message": f"Deleted {len(deleted_files)} photos", "deleted": deleted_files}), 200
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 

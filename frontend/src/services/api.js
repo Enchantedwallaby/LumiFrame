@@ -27,3 +27,25 @@ export async function apiPost(endpoint, data, isForm = false, token = null) {
   const res = await fetch(`${API_BASE_URL}${endpoint}`, options);
   return await res.json();
 }
+
+// Generic function for DELETE requests
+export async function apiDelete(endpoint, token = null, photographerKey = null) {
+  const headers = {};
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+  if (photographerKey) {
+    headers["X-Photographer-Key"] = photographerKey;
+  }
+
+  const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+    method: "DELETE",
+    headers,
+  });
+  return await res.json();
+}
+
+// Function to delete a user account
+export async function apiDeleteUser(username, photographerKey) {
+  return await apiDelete(`/delete_user/${username}`, null, photographerKey);
+}

@@ -1,3 +1,6 @@
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning, module="face_recognition_models")
+
 import face_recognition
 import os
 import numpy as np
@@ -95,6 +98,12 @@ def recognize_and_sort_photos(tolerance=0.5, copy_to_user_folder=True):
 
         # Remove the original file after processing to avoid clutter
         os.remove(image_path)
+
+    # Clean up empty unknown folder
+    unknown_folder = os.path.join(UPLOADS_DIR, "unknown")
+    if os.path.exists(unknown_folder) and not os.listdir(unknown_folder):
+        os.rmdir(unknown_folder)
+        print("🗑️ Removed empty unknown folder")
 
     return results_list
 

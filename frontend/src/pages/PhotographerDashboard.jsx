@@ -1,10 +1,28 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { apiDeleteUser } from "../services/api";
 
 export default function PhotographerDashboard() {
   const [users, setUsers] = useState([]);
   const [message, setMessage] = useState("Loading users...");
   const navigate = useNavigate();
+
+  const handleDeleteUser = async (username) => {
+    if (!confirm(`Delete user "${username}" and all associated data? This action cannot be undone.`)) return;
+
+    const key = localStorage.getItem("photographer_key");
+    try {
+      const res = await apiDeleteUser(username, key);
+      if (res.success) {
+        setUsers(users.filter(u => u.name !== username));
+        alert("User deleted successfully!");
+      } else {
+        alert("Failed to delete user: " + res.error);
+      }
+    } catch {
+      alert("Error deleting user.");
+    }
+  };
 
   useEffect(() => {
     const key = localStorage.getItem("photographer_key");
@@ -69,12 +87,20 @@ export default function PhotographerDashboard() {
                 </div>
               )}
 
-              <button
-                onClick={() => navigate(`/photographer/view/${user.name}`)}
-                className="btn-outline mt-2"
-              >
-                View Full Gallery →
-              </button>
+              <div className="flex gap-2 mt-2">
+                <button
+                  onClick={() => navigate(`/photographer/view/${user.name}`)}
+                  className="btn-outline"
+                >
+                  View Full Gallery →
+                </button>
+                <button
+                  onClick={() => handleDeleteUser(user.name)}
+                  className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+                >
+                  🗑️ Delete User
+                </button>
+              </div>
             </div>
           ))}
         </div>
